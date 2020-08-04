@@ -25,38 +25,20 @@ class FormularioTransferencia extends StatelessWidget{
         ),
         body: Column(
           children: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: TextField(
-                controller: ,
-                style: TextStyle(
-                  fontSize: 24.0,
-                ),
-                decoration:  InputDecoration(
-                  labelText: "Insira a sua conta",
-                  hintText: "000-0"
-                ),
-              ),
+            CampoEditor( 
+              controller: _contrCampoConta,
+              rotulo: "Digite uma conta",
+              dica: "0.00",
             ),
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: TextField(
-                style: TextStyle(
-                  fontSize: 24.0,
-                ),
-                decoration:  InputDecoration(
-                  icon: Icon(Icons.monetization_on),
-                  labelText: "Insira o valor",
-                  hintText: "0.00"
-                ),
-              ),
+            CampoEditor( 
+              icone: Icons.monetization_on,
+              controller: _contrCampoValor,
+              rotulo: "Digite um valor",
+              dica: "000-0",
             ),
             RaisedButton(
               onPressed: (){
-                  final String _conta = _contrCampoConta.text;
-                  final String _valor = Double.parse(_contrCampoValor);
-
-                  final Transferencia _transferencia = Transferencia(_valor, _conta);
+                 _criaTransferencia();
               },
               child: Text("Cadastrar")
             )
@@ -64,7 +46,50 @@ class FormularioTransferencia extends StatelessWidget{
         )
      );
   }
+
+  void _criaTransferencia(){
+      final String _conta = _contrCampoConta.text;
+      final double _valor = double.tryParse(_contrCampoValor.text);
+
+      if(_conta != null && _valor != null){
+        final transferenciaCriada = Transferencia(_valor, _conta);
+        debugPrint(transferenciaCriada._conta);
+  }
 }
+
+
+
+}
+
+class CampoEditor extends StatelessWidget {
+
+  final TextEditingController controller;
+  final String rotulo;
+  final String dica;
+  IconData icone;
+
+  CampoEditor({this.icone,this.rotulo, this.dica, this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+     return Padding(
+              padding: EdgeInsets.all(16.0),
+              child: TextField(
+                controller: controller,
+                style: TextStyle(
+                  fontSize: 24.0,
+                ),
+                decoration:  InputDecoration(
+                  icon: icone != null ? Icon(icone) : null ,
+                  labelText: rotulo,
+                  hintText: dica,
+                ),
+              ),
+            );
+  }
+  
+}
+
 
 
 
@@ -116,3 +141,4 @@ class Transferencia {
 
    Transferencia(this._valor, this._conta);
 }
+
