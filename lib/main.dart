@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
 void main() { runApp( ByteBankApp() ); }
@@ -7,7 +9,7 @@ class ByteBankApp extends StatelessWidget{
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-       home: FormularioTransferencia(),
+       home: ListaTransferencia(),
     );
   }
 }
@@ -38,7 +40,7 @@ class FormularioTransferencia extends StatelessWidget{
             ),
             RaisedButton(
               onPressed: (){
-                 _criaTransferencia();
+                 _criaTransferencia(context);
               },
               child: Text("Cadastrar")
             )
@@ -47,13 +49,15 @@ class FormularioTransferencia extends StatelessWidget{
      );
   }
 
-  void _criaTransferencia(){
+  void _criaTransferencia(BuildContext context){
       final String _conta = _contrCampoConta.text;
       final double _valor = double.tryParse(_contrCampoValor.text);
 
       if(_conta != null && _valor != null){
         final transferenciaCriada = Transferencia(_valor, _conta);
         debugPrint(transferenciaCriada._conta);
+        Navigator.pop(context, transferenciaCriada);
+      } 
   }
 }
 
@@ -76,6 +80,13 @@ class CampoEditor extends StatelessWidget {
               padding: EdgeInsets.all(16.0),
               child: TextField(
                 controller: controller,
+/*
+     CONTROLLER - é um atributo do textfield que pega o que vc digita em um campo
+                  e manda para uma variavel que tem que ser do tipo...
+
+     TEXTEDITINGCONTROLLER.
+
+*/
                 style: TextStyle(
                   fontSize: 24.0,
                 ),
@@ -93,7 +104,7 @@ class CampoEditor extends StatelessWidget {
 
 
 
-class ListaTransferencias extends StatelessWidget{
+class ListaTransferencia extends StatelessWidget{
     
 @override
 Widget build(BuildContext context) {
@@ -109,12 +120,48 @@ Widget build(BuildContext context) {
             ],
         ),
         floatingActionButton: FloatingActionButton(
-          onPressed: null,
+          onPressed: (){
+            Future<Transferencia> futuro = Navigator.push(context, MaterialPageRoute(
+              builder: (context) {
+                 return FormularioTransferencia();
+              },
+            ));
+
+            futuro.then((transferenciaRecebida){
+              debugPrint("$transferenciaRecebida");
+            });
+            
+          },
           child: Icon(Icons.add),
         ),  
       );
    }
 }
+
+/*
+
+  NAVIGATOR - referente a comportamentos de tela, entrar numa nova ou entrar em uma anterior
+
+  MATERIALPAGEROUTE - nos dá acesso a efeitos de transição de tela. Essa referência implementa
+                      um Route<T> que recebe um genérico e, a partir dela, conseguiremos 
+                      passar alguns argumentos de modo a navegarmos para a tela esperada.
+
+  builder - dentre os args podemos enviar um builder que faz a implementacao de um callback
+            sendo esse callback recebendo um contexto e retornando a widget da pagina 
+            buildada (a pagina que a gente quer).
+
+  Future - é basicamente um callback que permite o acesso a resposta durande a navegacao
+           Para fazermos esse acesso, é necessario outra função de callback que somente o receberá 
+           no momento em que esse retorno acontecer
+
+           ex: Por exemplo, quando entramos na tela de formulário, todo o código no nosso 
+            FloatingActionButton já foi executado e não teremos mais acesso a ele.
+            Justamente por isso, precisaremos de um comportamento para receber 
+            os valores, algo que conseguiremos com o future.then(). Assim, no 
+            evento do clique em "Confirmar", por exemplo, executaremos outro código 
+            e devolverá os valores a esse Future.
+ */
+
 
 class ItemTransferencia extends StatelessWidget{
 
