@@ -10,12 +10,27 @@ class ByteBankApp extends StatelessWidget{
   Widget build(BuildContext context) {
     return MaterialApp(
        home: ListaTransferencia(),
+       theme: ThemeData(
+         primaryColor: Colors.green[900],
+         accentColor: Colors.blueAccent[700],    //cor secundaria
+         buttonTheme: ButtonThemeData(           //thema de cor para botoes
+           buttonColor: Colors.blueAccent[700],
+           textTheme: ButtonTextTheme.primary    // cor branca do botao (letra)
+         )
+       ),
     );
   }
 }
 
-class FormularioTransferencia extends StatelessWidget{
+class FormularioTransferencia extends StatefulWidget{
+  @override
+  State<StatefulWidget> createState() {
+    return FormularioTransferenciaState();
+  }
+}
 
+class FormularioTransferenciaState extends State<FormularioTransferencia>{
+ 
   final TextEditingController _contrCampoConta = TextEditingController();
   final TextEditingController _contrCampoValor = TextEditingController();
 
@@ -25,7 +40,8 @@ class FormularioTransferencia extends StatelessWidget{
         appBar: AppBar(
           title: Text("Criar transferencia"),
         ),
-        body: Column(
+        body: SingleChildScrollView ( 
+          child: Column(
           children: <Widget>[
             CampoEditor( 
               controller: _contrCampoConta,
@@ -46,6 +62,7 @@ class FormularioTransferencia extends StatelessWidget{
             )
           ]
         )
+      ) 
      );
   }
 
@@ -59,11 +76,10 @@ class FormularioTransferencia extends StatelessWidget{
         Navigator.pop(context, transferenciaCriada);
       } 
   }
+  
 }
 
 
-
-}
 
 class CampoEditor extends StatelessWidget {
 
@@ -104,20 +120,30 @@ class CampoEditor extends StatelessWidget {
 
 
 
-class ListaTransferencia extends StatelessWidget{
-    
-@override
-Widget build(BuildContext context) {
-     return Scaffold(
+class ListaTransferencia extends StatefulWidget{
+
+  List<Transferencia> _transferencias = List();
+
+  @override
+  State<StatefulWidget> createState() {
+     return ListaTransferenciaState();
+  }
+}
+
+class ListaTransferenciaState extends State<ListaTransferencia>{
+
+  @override
+  Widget build(BuildContext context) {
+      return Scaffold(
         appBar: AppBar(
           title: Text("Transferências"),
         ),
-        body: Column(
-            children: <Widget>[
-               ItemTransferencia(Transferencia(100.00 ,"000-5")),
-               ItemTransferencia(Transferencia(450.00 ,"000-6")),
-               ItemTransferencia(Transferencia(50.00 ,"000-7")),
-            ],
+        body: ListView.builder(
+           itemCount: widget._transferencias.length,
+           itemBuilder: (context, indice){
+             final transferencia = widget._transferencias[indice];
+             return ItemTransferencia(transferencia);
+           },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: (){
@@ -128,16 +154,19 @@ Widget build(BuildContext context) {
             ));
 
             futuro.then((transferenciaRecebida){
-              debugPrint("$transferenciaRecebida");
+              if (transferenciaRecebida != null){
+                  debugPrint("$transferenciaRecebida");
+                  widget._transferencias.add(transferenciaRecebida);
+              }
             });
             
           },
           child: Icon(Icons.add),
         ),  
       );
-   }
-}
+  }
 
+}
 /*
 
   NAVIGATOR - referente a comportamentos de tela, entrar numa nova ou entrar em uma anterior
@@ -189,3 +218,44 @@ class Transferencia {
    Transferencia(this._valor, this._conta);
 }
 
+/*
+
+BUG 1 - o cara vai no formulario, ate preenche um valor mais da um return, ai da erro
+SULUCAO - o retorno do pop nao esta fazendo uma validacao para valor nulo, ai nessse caso é 
+          nessessario criar um if no futuro.then pra tratar se o valor retornado for nulo
+
+BUG 2 - o cara vai virar a tela pra preencher o formulario e da problemas de espaçamento.
+SULUCAO - envolva o column do formulario com outro widget chamado singlechildscrollview, 
+
+BUG 3 - em landscape ainda (tela deitada) ocorre um bug no qual se vc preenche os campos e 
+        aperta o back do android  pra confirmar, antes de apertar o botao vc vê que os dados 
+        digitados somem
+
+        isso se da ao fato do TextEditingController ser uma referencia que muda o estado e
+        conteudo dos widgets.
+
+SOLUCAO - converter o formulario de transferencia de stateless para stateful e reajustar as 
+          variaveis criadas la
+
+BUG 4 - aprendemos que o build é usado sempre que fizemos algo ou atualizamos a pagina
+        porem, la no future.then se a gente coloca um tempo de 1s pra adicionar a 
+        transferencia, quando a gente ver o resultado verificamos que nada foi adicionado
+        a lista de transferencias (esse é o risco de trabalharmos com execusoes assincronas)
+
+        porque? simples. o build foi chamado porem a atualizacao por ter vindo 1s nao veio nesse build
+        sendo nessessario vc ir na outra tela e voltar pra buildar denovo e assim aparecer
+        sua transferencia ja criada
+
+SOLUCAO - setState((){}) - que recebe um callback que dentro dele faz tudo aquilo que a 
+                          gente colocar e depois atualiza a tela chamando o build denovo, que só é chamado
+                          depois que toda a instrucao dentro de colchetes dentro dele seja executado
+      
+      agora podemos colocar até 3 minutos de delay pra add a lista que agora funcionara.
+    
+         
+
+
+
+
+
+*/
